@@ -1,7 +1,7 @@
+#include <sha256.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <Crypto.h>
-#include <SHA256.h>
 #include <Base64.h>
 
 //-----WIFI SETTINGS-----
