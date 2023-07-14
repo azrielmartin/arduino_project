@@ -9,16 +9,12 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include "SinricPro.h"
-#include "SinricProSwitch.h"
 #include <map>
 #include <Crypto.h>
 #include <Hash.h>
 
 #define WIFI_SSID         "YOUR-WIFI-NAME"    
 #define WIFI_PASS         "YOUR-WIFI-PASSWORD"
-#define APP_KEY           "YOUR-APP-KEY"      // Should look like "de0bxxxx-1x3x-4x3x-ax2x-5dabxxxxxxxx"
-#define APP_SECRET        "YOUR-APP-SECRET"   // Should look like "5f36xxxx-x3x7-4x3x-xexe-e86724a9xxxx-4c4axxxx-3x3x-x5xe-x9x3-333d65xxxxxx"
 
 //Enter the device IDs here
 #define device_ID_1   "SWITCH_ID_NO_1_HERE"
@@ -123,9 +119,6 @@ void handleFlipSwitches() {
           int relayPIN = devices[deviceId].relayPIN;                              // get the relayPIN from config
           bool newRelayState = !digitalRead(relayPIN);                            // set the new relay State
           digitalWrite(relayPIN, newRelayState);                                  // set the trelay to the new state
-
-          SinricProSwitch &mySwitch = SinricPro[deviceId];                        // get Switch device from SinricPro
-          mySwitch.sendPowerStateEvent(!newRelayState);                            // send the event
 #ifdef TACTILE_BUTTON
         }
 #endif      
@@ -149,19 +142,6 @@ void setupWiFi()
   Serial.printf("connected!\r\n[WiFi]: IP-Address is %s\r\n", WiFi.localIP().toString().c_str());
 }
 
-void setupSinricPro()
-{
-  for (auto &device : devices)
-  {
-    const char *deviceId = device.first.c_str();
-    SinricProSwitch &mySwitch = SinricPro[deviceId];
-    mySwitch.onPowerState(onPowerState);
-  }
-
-  SinricPro.begin(APP_KEY, APP_SECRET);
-  SinricPro.restoreDeviceStates(true);
-}
-
 void setup()
 {
   Serial.begin(BAUD_RATE);
@@ -172,31 +152,9 @@ void setup()
   setupRelays();
   setupFlipSwitches();
   setupWiFi();
-  setupSinricPro();
-
-  //CLIENT SIDE HMAC Generation method
-  const String currentTimestamp = String(millis());
-  const String apiKey = "14444878-632a-07be-67c5-703e3f566392";
-  const String apiSecret = "f2c24d11-a83e-dd9b-579c-9be7228a1a26";
-  const String url = "YOUR_RELAY_BASE_URL"; // Replace with your relay base URL
-  const String dataA = currentTimestamp + "/" + url;
-
-  // Generate the HMAC signature with SHA256 algorithm
-  const String hmacSignature = Crypto.hmacSha256(dataA, apiSecret).toString();
-  Serial.println(dataA);
-  Serial.println(hmacSignature);
-
-  // Add headers to the request
-  String headers = "X-API-Key: " + apiKey + "\r\n";
-  headers += "X-HMAC-Signature: " + hmacSignature + "\r\n";
-  headers += "X-Timestamp: " + currentTimestamp + "\r\n";
-
-  // Uncomment the following line to add the headers to the request
-  // client.addHeader(headers);
 }
 
 void loop()
 {
-  SinricPro.handle();
   handleFlipSwitches();
 }
