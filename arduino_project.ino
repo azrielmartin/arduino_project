@@ -1,6 +1,6 @@
 // Uncomment the following line to enable serial debug output
 //#define ENABLE_DEBUG
-//AZI Gwapo
+
 #ifdef ENABLE_DEBUG
        #define DEBUG_ESP_PORT Serial
        #define NODEBUG_WEBSOCKETS
@@ -13,10 +13,10 @@
 #include <Crypto.h>
 #include <Hash.h>
 
-#define WIFI_SSID         "YOUR-WIFI-NAME"    
-#define WIFI_PASS         "YOUR-WIFI-PASSWORD"
+#define WIFI_SSID  "Azriel"   
+#define WIFI_PASS  "theresa72"
 
-//Enter the device IDs here
+//Enter the device IDs here: can be generated then make a qr code about this one.
 #define device_ID_1   "SWITCH_ID_NO_1_HERE"
 #define device_ID_2   "SWITCH_ID_NO_2_HERE"
 #define device_ID_3   "SWITCH_ID_NO_3_HERE"
@@ -92,6 +92,14 @@ void setupFlipSwitches() {
   }
 }
 
+bool onPowerState(String deviceId, bool &state)
+{
+  Serial.printf("%s: %s\r\n", deviceId.c_str(), state ? "on" : "off");
+  int relayPIN = devices[deviceId].relayPIN; // get the relay pin for corresponding device
+  digitalWrite(relayPIN, !state);             // set the new relay state
+  return true;
+}
+
 void handleFlipSwitches() {
   unsigned long actualMillis = millis();                                          // get actual millis
   for (auto &flipSwitch : flipSwitches) {                                         // for each flipSwitch in flipSwitches map
@@ -144,26 +152,6 @@ void setup()
   setupRelays();
   setupFlipSwitches();
   setupWiFi();
-
-  //CLIENT SIDE HMAC Generation method
-  const unsigned long currentTimestamp = millis();
-  const String apiKey = "14444878-632a-07be-67c5-703e3f566392";
-  const String apiSecret = "f2c24d11-a83e-dd9b-579c-9be7228a1a26";
-  const String url = "YOUR_RELAY_BASE_URL"; // Replace with your relay base URL
-  const String dataA = String(currentTimestamp) + "/" + url;
-
-  // Generate the HMAC signature with SHA256 algorithm
-  const String hmacSignature = Crypto.hmacSha256(dataA, apiSecret).toString();
-  Serial.println(dataA);
-  Serial.println(hmacSignature);
-
-  // Add headers to the request
-  String headers = "X-API-Key: " + apiKey + "\r\n";
-  headers += "X-HMAC-Signature: " + hmacSignature + "\r\n";
-  headers += "X-Timestamp: " + String(currentTimestamp) + "\r\n";
-
-  // Uncomment the following lines to add the headers to the request
-  // client.addHeader(headers);
 }
 
 void loop()
