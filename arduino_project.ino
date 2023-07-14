@@ -1,6 +1,6 @@
 // Uncomment the following line to enable serial debug output
 //#define ENABLE_DEBUG
-
+//AZI Gwapo
 #ifdef ENABLE_DEBUG
        #define DEBUG_ESP_PORT Serial
        #define NODEBUG_WEBSOCKETS
