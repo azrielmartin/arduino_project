@@ -8,7 +8,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <map>
-#include <ArduinoCrypto.h>
+#include <Crypto.h>
 #include <SHA256.h>
 
 #define WIFI_SSID  "Azriel"   
@@ -153,13 +153,19 @@ void loop() {
 }
 
 String hmacSha256(const String& key, const String& value) {
-  uint8_t hmacResult[CryptoSHA256::HASH_SIZE];
-  CryptoSHA256().hmac(key.c_str(), key.length(), value.c_str(), value.length(), hmacResult);
+  const uint8_t* keyBytes = reinterpret_cast<const uint8_t*>(key.c_str());
+  size_t keyLength = key.length();
+
+  const uint8_t* valueBytes = reinterpret_cast<const uint8_t*>(value.c_str());
+  size_t valueLength = value.length();
+
+  SHA256 sha256;
+  hmac_sha256(keyBytes, keyLength, valueBytes, valueLength, sha256, HMAC256);
   
   String hmacSignature;
-  for (int i = 0; i < sizeof(hmacResult); i++) {
+  for (int i = 0; i < SHA256_HASH_SIZE; i++) {
     char hex[3];
-    sprintf(hex, "%02x", hmacResult[i]);
+    sprintf(hex, "%02x", sha256.resultHmac[i]);
     hmacSignature += hex;
   }
 
