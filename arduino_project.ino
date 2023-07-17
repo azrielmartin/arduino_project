@@ -159,9 +159,19 @@ String hmacSha256(const String& key, const String& value) {
   byte valueBytes[value.length()];
   value.getBytes(valueBytes, value.length());
 
-  SHA256 sha256; // Change here
-  sha256.initHmac(keyBytes, sizeof(keyBytes));
-  sha256.print(valueBytes, sizeof(valueBytes));
+  CryptoSha256 sha256;
+  sha256.resetHMAC(keyBytes, key.length());
+  sha256.update(valueBytes, value.length());
 
-  return sha256.resultHmac();
+  uint8_t hmacResult[32];
+  sha256.finalizeHMAC(keyBytes, key.length(), hmacResult);
+
+  String hmacSignature;
+  for (int i = 0; i < sizeof(hmacResult); i++) {
+    char hex[3];
+    sprintf(hex, "%02x", hmacResult[i]);
+    hmacSignature += hex;
+  }
+
+  return hmacSignature;
 }
