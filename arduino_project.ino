@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>  // Library for parsing JSON data
-//jusghdsugdgd
+//j
 const char* ssid = "Azriel";
 const char* password = "theresa72";
 const char* host = "ojt-relay-switch-api.vercel.app";
