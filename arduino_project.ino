@@ -1,11 +1,23 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
-#include <ArduinoJson.h>  // Library for parsing JSON data
-//j
+#include <ArduinoJson.h> //6.10.1
+ 
 const char* ssid = "Azriel";
 const char* password = "theresa72";
 const char* host = "ojt-relay-switch-api.vercel.app";
+const char* deviceID = "7198ec46-0d2e-49a9-a9d5-121058cfc425";
 const int httpsPort = 443;
+const int relay1Pin = D1;
+const int relay2Pin = D2;
+const int relay3Pin = D3;
+const int relay4Pin = D4;
+
+bool relay1State = false;
+bool relay2State = false;
+bool relay3State = false;
+bool relay4State = false;
+
+WiFiClientSecure client;
 
 void setup() {
   Serial.begin(115200);
@@ -17,13 +29,15 @@ void setup() {
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
+
+  pinMode(relay1Pin, OUTPUT);
+  pinMode(relay2Pin, OUTPUT);
+  pinMode(relay3Pin, OUTPUT);
+  pinMode(relay4Pin, OUTPUT);
 }
-WiFiClientSecure client;
 
 void loop() {
-
-  client.setInsecure();  // Disable certificate verification (INSECURE)
-
+  client.setInsecure();
   Serial.print("Connecting to ");
   Serial.println(host);
 
@@ -32,27 +46,54 @@ void loop() {
     return;
   }
 
-
-
-  //if active is false loop infinite 2 other functions
   getAmIActive();
+  
+  String request = client.readStringUntil('\r');
+  Serial.println(request);
+  client.flush();
 
-  //if active is false loop infinite 2 other functions
-  //getCurrentTime. response = date and time
+  if (request.indexOf("/relay1on") != -1) {
+    relay1State = true;
+    digitalWrite(relay1Pin, HIGH);
+  } else if (request.indexOf("/relay1off") != -1) {
+    relay1State = false;
+    digitalWrite(relay1Pin, LOW);
+  } else if (request.indexOf("/relay2on") != -1) {
+    relay2State = true;
+    digitalWrite(relay2Pin, HIGH);
+  } else if (request.indexOf("/relay2off") != -1) {
+    relay2State = false;
+    digitalWrite(relay2Pin, LOW);
+  } else if (request.indexOf("/relay3on") != -1) {
+    relay3State = true;
+    digitalWrite(relay3Pin, HIGH);
+  } else if (request.indexOf("/relay3off") != -1) {
+    relay3State = false;
+    digitalWrite(relay3Pin, LOW);
+  } else if (request.indexOf("/relay4on") != -1) {
+    relay4State = true;
+    digitalWrite(relay4Pin, HIGH);
+  } else if (request.indexOf("/relay4off") != -1) {
+    relay4State = false;
+    digitalWrite(relay4Pin, LOW);
+  }
 
-  //if active is true,
-  //getMyChannelStatus
-  //inside here create a check if channel_time is greater than current time
-  //example channel 1 time is 13:45, then if current_time is 13:46 turn off that channel channel_time < current_time else off channel
+  String response = "HTTP/1.1 200 OK\r\n\r\n";
+  response += "Relay 1: " + String(relay1State) + "<br>";
+  response += "Relay 2: " + String(relay2State) + "<br>";
+  response += "Relay 3: " + String(relay3State) + "<br>";
+  response += "Relay 4: " + String(relay4State) + "<br>";
 
+  client.print(response);
+  delay(1);
+  Serial.println("Client disconnected");
 
+  client.stop();
 
-  delay(5000);  // Wait for 5 seconds before making another request
+  delay(5000);
 }
 
-
 void getAmIActive() {
-  // Make the HTTPS request
   client.println("GET /api/devices/check-activation?deviceId=7198ec46-0d2e-49a9-a9d5-121058cfc425 HTTP/1.1");
   client.print("Host: ");
   client.println(host);
@@ -61,25 +102,21 @@ void getAmIActive() {
 
   Serial.println("Request sent.");
 
-  // Wait for the response
   while (client.connected()) {
     String line = client.readStringUntil('\n');
     Serial.println(line);
 
     if (line == "\r") {
-      // Empty line indicates the end of the headers, the JSON data will follow
       break;
     }
   }
 
-  // Process JSON response
   String jsonPayload;
   while (client.available()) {
     jsonPayload = client.readStringUntil('\n');
     Serial.println(jsonPayload);
   }
 
-  // Parse JSON data
   StaticJsonDocument<256> jsonDocument;
   DeserializationError error = deserializeJson(jsonDocument, jsonPayload);
 
@@ -87,9 +124,8 @@ void getAmIActive() {
     Serial.print("Error parsing JSON: ");
     Serial.println(error.c_str());
   } else {
-    // Access the "message" field from the JSON data
     char* data;
-
+    
 
     if (jsonDocument.containsKey("error")) {
       data = strdup(jsonDocument["error"].as<char*>());
@@ -97,16 +133,60 @@ void getAmIActive() {
       data = strdup(jsonDocument["message"].as<char*>());
     } else if (jsonDocument.containsKey("activated")) {
       data = strdup(jsonDocument["activated"].as<char*>());
+      if (strcmp(data, "true") == 0) {
+        // If active, get channel status
+        getMyChannelStatus();
+      }
     } else {
-      data = nullptr;  // Set data to nullptr if none of the keys are present
+      data = nullptr;
     }
 
     if (data != nullptr) {
       Serial.print("Data: ");
       Serial.println(data);
-      // STORE IT IN BOOL activated = data// false/true
-      free(data);  // Free the dynamically allocated memory
+      free(data);
     }
+  }
+
+  Serial.println("Request complete.");
+  client.stop();
+}
+
+void getMyChannelStatus() {
+  client.println("GET /api/devices/get-channel-status?deviceId=7198ec46-0d2e-49a9-a9d5-121058cfc425 HTTP/1.1");
+  client.print("Host: ");
+  client.println(host);
+  client.println("Connection: close");
+  client.println();
+
+  Serial.println("Request sent.");
+
+  while (client.connected()) {
+    String line = client.readStringUntil('\n');
+    Serial.println(line);
+
+    if (line == "\r") {
+      break;
+    }
+  }
+
+  String jsonPayload;
+  while (client.available()) {
+    jsonPayload = client.readStringUntil('\n');
+    Serial.println(jsonPayload);
+  }
+
+  StaticJsonDocument<256> jsonDocument;
+  DeserializationError error = deserializeJson(jsonDocument, jsonPayload);
+
+  if (error) {
+    Serial.print("Error parsing JSON: ");
+    Serial.println(error.c_str());
+  } else {
+    // Process channel status JSON data here
+    // Implement your logic based on the response
+    // Example: Check if channel_time is greater than current time and turn off the channel if required
+    // Remember to update the corresponding relay state variables and control the relays accordingly
   }
 
   Serial.println("Request complete.");
