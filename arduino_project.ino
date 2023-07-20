@@ -11,6 +11,7 @@ const int relay1Pin = D1;
 const int relay2Pin = D2;
 const int relay3Pin = D3;
 const int relay4Pin = D4;
+// char* data_channel[3];
 
 bool relay1State = false;
 bool relay2State = false;
@@ -182,13 +183,49 @@ void getMyChannelStatus() {
   if (error) {
     Serial.print("Error parsing JSON: ");
     Serial.println(error.c_str());
-  } else {
-    // Process channel status JSON data here
-    // Implement your logic based on the response
-    // Example: Check if channel_time is greater than current time and turn off the channel if required
-    // Remember to update the corresponding relay state variables and control the relays accordingly
+  } else if(!error) {
+    JsonArray statusArray = jsonDocument.as<JsonArray>();
+
+    Serial.println("Channel Status:");
+
+    for (JsonObject status : statusArray) {
+      // Access individual elements of each "status" object
+      const char* name = status["name"];
+      bool statusValue = status["status"];
+      const char* date = status["timeout"]["date"];
+      const char* time = status["timeout"]["time"];
+
+      // Print the channel status data
+        Serial.print("Name: ");
+        Serial.println(name);
+        Serial.print("Status: ");
+        Serial.println(statusValue);
+        Serial.print("Date: ");
+        Serial.println(date ? date : "null");
+        Serial.print("Time: ");
+        Serial.println(time ? time : "null");
+        Serial.println();
+
+      if (strcmp(name, "Channel 1") == 0) {
+        relay1State = statusValue;
+        digitalWrite(relay1Pin, relay1State ? HIGH : LOW);
+
+      } else if (strcmp(name, "Channel 2") == 0) {
+        relay2State = statusValue;
+        digitalWrite(relay2Pin, relay2State ? HIGH : LOW);
+
+      }else if (strcmp(name, "Channel 3") == 0) {
+        relay3State = statusValue;
+        digitalWrite(relay3Pin, relay3State ? HIGH : LOW);
+
+      }else if (strcmp(name, "Channel 4") == 0) {
+        relay4State = statusValue;
+        digitalWrite(relay4Pin, relay4State ? HIGH : LOW);
+      }
+    }
   }
 
   Serial.println("Request complete.");
   client.stop();
 }
+
