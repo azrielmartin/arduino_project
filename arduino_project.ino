@@ -139,10 +139,7 @@ void getMyChannelStatus() {
   if (error) {
     Serial.print("Error parsing JSON: ");
     Serial.println(error.c_str());
-  } 
-  
-  
-  else if (!jsonPayload.isEmpty()) {
+  } else if (!jsonPayload.isEmpty()) {
     Serial.println("Channel Status:");
 
     JsonArray statusArray = jsonDocument["status"].as<JsonArray>();
@@ -168,22 +165,36 @@ void getMyChannelStatus() {
     const char* date4;
     const char* time4;
 
-    for (int i = 0; jsonDocument.length <4, i ++) {
-      // Access individual elements of each "status" object
+    size_t jsonLength = measureJson(jsonDocument);
+
+    for (int i = 0; i < 4; i++) {
+
+      JsonObject status = statusArray[i];
       const char* name = status["name"];
       bool statusValue = status["status"];
       const char* date = status["timeout"]["date"];
       const char* time = status["timeout"]["time"];
 
-
-      if(i == 0){
-      // put values to 1
-      }else  if(i == 1){
-      // put values to 2
-      }else  if(i == 2){
-      // put values to 3
-      }else  if(i == 3){
-      // put values to 4
+      if (i == 0) {
+        name1 = name;
+        statusValue1 = statusValue;
+        date1 = date;
+        time1 = time;
+      } else if (i == 1) {
+        name2 = name;
+        statusValue2 = statusValue;
+        date2 = date;
+        time2 = time;
+      } else if (i == 2) {
+        name3 = name;
+        statusValue3 = statusValue;
+        date3 = date;
+        time3 = time;
+      } else if (i == 3) {
+        name4 = name;
+        statusValue4 = statusValue;
+        date4 = date;
+        time4 = time;
       } else {
         // error
       }
@@ -200,57 +211,18 @@ void getMyChannelStatus() {
       Serial.println();
     }
 
-      //Channel 1
-      if (statusValue1 == true) {
-        relay1State = true;
-          // if(time is greater than time1){
-          // relay1State = false;
-          // }
-        digitalWrite(relay1Pin, HIGH);
-      } 
-      else if (statusValue1 == false) {
-        relay1State = false;
-      }
-      
-      //Channel 2
-      if (statusValue2 == true) {
-        relay2State = true;
-          // if(time is greater than time1){
-          // relay2State = false;
-          // }
-        digitalWrite(relay2Pin, HIGH);
-      } 
-      else if (statusValue2 == false) {
-        relay2State = false;
-      }
+    // Update relay states based on channel status
+    digitalWrite(relay1Pin, statusValue1);
+    digitalWrite(relay2Pin, statusValue2);
+    digitalWrite(relay3Pin, statusValue3);
+    digitalWrite(relay4Pin, statusValue4);
 
-      //Channel 3
-      if (statusValue3 == true) {
-        relay3State = true;
-          // if(time is greater than time1){
-          // relay3State = false;
-          // }
-        digitalWrite(relay3Pin, HIGH);
-      } 
-      else if (statusValue3 == false) {
-        relay3State = false;
-      }
-      
-      //Channel 4
-      if (statusValue4 == true) {
-        relay4State = true;
-          // if(time is greater than time1){
-          // relay3State = false;
-          // }
-        digitalWrite(relay4Pin, HIGH);
-      } 
-      else if (statusValue 1 == false) {
-        relay1State = false;
-      }
-
+    relay1State = statusValue1;
+    relay2State = statusValue2;
+    relay3State = statusValue3;
+    relay4State = statusValue4;
   }
 
   Serial.println("Request complete.");
   client.stop();
 }
-
