@@ -7,10 +7,10 @@ const char* password = "theresa72";
 const char* host = "ojt-relay-switch-api.vercel.app";
 const char* deviceID = "7198ec46-0d2e-49a9-a9d5-121058cfc425";
 const int httpsPort = 443;
-const int relay1Pin = D1;
-const int relay2Pin = D2;
-const int relay3Pin = D3;
-const int relay4Pin = D4;
+const int relay1Pin = 5;
+const int relay2Pin = 4;
+const int relay3Pin = 0;
+const int relay4Pin = 2;
 // char* data_channel[3];
 
 bool relay1State = false;
@@ -143,61 +143,13 @@ void getMyChannelStatus() {
     Serial.println("Channel Status:");
 
     JsonArray statusArray = jsonDocument["status"].as<JsonArray>();
-    Serial.println(jsonDocument);
 
-    const char* name1;
-    bool statusValue1;
-    const char* date1;
-    const char* time1;
-
-    const char* name2;
-    bool statusValue2;
-    const char* date2;
-    const char* time2;
-
-    const char* name3;
-    bool statusValue3;
-    const char* date3;
-    const char* time3;
-
-    const char* name4;
-    bool statusValue4;
-    const char* date4;
-    const char* time4;
-
-    size_t jsonLength = measureJson(jsonDocument);
-
-    for (int i = 0; i < 4; i++) {
-
+    for (int i = 0; i < statusArray.size(); i++) {
       JsonObject status = statusArray[i];
       const char* name = status["name"];
       bool statusValue = status["status"];
       const char* date = status["timeout"]["date"];
       const char* time = status["timeout"]["time"];
-
-      if (i == 0) {
-        name1 = name;
-        statusValue1 = statusValue;
-        date1 = date;
-        time1 = time;
-      } else if (i == 1) {
-        name2 = name;
-        statusValue2 = statusValue;
-        date2 = date;
-        time2 = time;
-      } else if (i == 2) {
-        name3 = name;
-        statusValue3 = statusValue;
-        date3 = date;
-        time3 = time;
-      } else if (i == 3) {
-        name4 = name;
-        statusValue4 = statusValue;
-        date4 = date;
-        time4 = time;
-      } else {
-        // error
-      }
 
       // Print the channel status data
       Serial.print("Name: ");
@@ -209,18 +161,30 @@ void getMyChannelStatus() {
       Serial.print("Time: ");
       Serial.println(time ? time : "null");
       Serial.println();
+
+      // Update relay states based on channel status
+      if (i == 0) {
+        relay1State = statusValue;
+        digitalWrite(relay1Pin, statusValue ? HIGH : LOW);
+      } else if (i == 1) {
+        relay2State = statusValue;
+        digitalWrite(relay2Pin, statusValue ? HIGH : LOW);
+      } else if (i == 2) {
+        relay3State = statusValue;
+        digitalWrite(relay3Pin, statusValue ? HIGH : LOW);
+      } else if (i == 3) {
+        relay4State = statusValue;
+        digitalWrite(relay4Pin, statusValue ? HIGH : LOW);
+      } else {
+        // Handle an unexpected number of channels (if needed)
+      }
     }
 
-    // Update relay states based on channel status
-    digitalWrite(relay1Pin, statusValue1);
-    digitalWrite(relay2Pin, statusValue2);
-    digitalWrite(relay3Pin, statusValue3);
-    digitalWrite(relay4Pin, statusValue4);
-
-    relay1State = statusValue1;
-    relay2State = statusValue2;
-    relay3State = statusValue3;
-    relay4State = statusValue4;
+    // Print the JSON document in a pretty format
+    String jsonPretty;
+    serializeJsonPretty(jsonDocument, jsonPretty);
+    Serial.println("JSON Document:");
+    Serial.println(jsonPretty);
   }
 
   Serial.println("Request complete.");
