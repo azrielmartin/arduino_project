@@ -39,58 +39,15 @@ void setup() {
 
 void loop() {
   client.setInsecure();
+
   Serial.print("Connecting to ");
   Serial.println(host);
-
   if (!client.connect(host, httpsPort)) {
     Serial.println("Connection failed.");
     return;
   }
 
   getAmIActive();
-  
-  String request = client.readStringUntil('\r');
-  Serial.println(request);
-  client.flush();
-
-  if (request.indexOf("/relay1on") != -1) {
-    relay1State = true;
-    digitalWrite(relay1Pin, HIGH);
-  } else if (request.indexOf("/relay1off") != -1) {
-    relay1State = false;
-    digitalWrite(relay1Pin, LOW);
-  } else if (request.indexOf("/relay2on") != -1) {
-    relay2State = true;
-    digitalWrite(relay2Pin, HIGH);
-  } else if (request.indexOf("/relay2off") != -1) {
-    relay2State = false;
-    digitalWrite(relay2Pin, LOW);
-  } else if (request.indexOf("/relay3on") != -1) {
-    relay3State = true;
-    digitalWrite(relay3Pin, HIGH);
-  } else if (request.indexOf("/relay3off") != -1) {
-    relay3State = false;
-    digitalWrite(relay3Pin, LOW);
-  } else if (request.indexOf("/relay4on") != -1) {
-    relay4State = true;
-    digitalWrite(relay4Pin, HIGH);
-  } else if (request.indexOf("/relay4off") != -1) {
-    relay4State = false;
-    digitalWrite(relay4Pin, LOW);
-  }
-
-  String response = "HTTP/1.1 200 OK\r\n\r\n";
-  response += "Relay 1: " + String(relay1State) + "<br>";
-  response += "Relay 2: " + String(relay2State) + "<br>";
-  response += "Relay 3: " + String(relay3State) + "<br>";
-  response += "Relay 4: " + String(relay4State) + "<br>";
-
-  client.print(response);
-  delay(1);
-  Serial.println("Client disconnected");
-
-  client.stop();
-
   delay(5000);
 }
 
@@ -102,8 +59,7 @@ void getAmIActive() {
   client.println();
 
   Serial.println("Request sent.");
-
-  while (client.connected()) {
+  while (client.connected()){
     String line = client.readStringUntil('\n');
     Serial.println(line);
 
@@ -183,46 +139,115 @@ void getMyChannelStatus() {
   if (error) {
     Serial.print("Error parsing JSON: ");
     Serial.println(error.c_str());
-  } else if(!error) {
-    JsonArray statusArray = jsonDocument.as<JsonArray>();
-
+  } 
+  
+  
+  else if (!jsonPayload.isEmpty()) {
     Serial.println("Channel Status:");
 
-    for (JsonObject status : statusArray) {
+    JsonArray statusArray = jsonDocument["status"].as<JsonArray>();
+    Serial.println(jsonDocument);
+
+    const char* name1;
+    bool statusValue1;
+    const char* date1;
+    const char* time1;
+
+    const char* name2;
+    bool statusValue2;
+    const char* date2;
+    const char* time2;
+
+    const char* name3;
+    bool statusValue3;
+    const char* date3;
+    const char* time3;
+
+    const char* name4;
+    bool statusValue4;
+    const char* date4;
+    const char* time4;
+
+    for (int i = 0; jsonDocument.length <4, i ++) {
       // Access individual elements of each "status" object
       const char* name = status["name"];
       bool statusValue = status["status"];
       const char* date = status["timeout"]["date"];
       const char* time = status["timeout"]["time"];
 
-      // Print the channel status data
-        Serial.print("Name: ");
-        Serial.println(name);
-        Serial.print("Status: ");
-        Serial.println(statusValue);
-        Serial.print("Date: ");
-        Serial.println(date ? date : "null");
-        Serial.print("Time: ");
-        Serial.println(time ? time : "null");
-        Serial.println();
 
-      if (strcmp(name, "Channel 1") == 0) {
-        relay1State = statusValue;
-        digitalWrite(relay1Pin, relay1State ? HIGH : LOW);
-
-      } else if (strcmp(name, "Channel 2") == 0) {
-        relay2State = statusValue;
-        digitalWrite(relay2Pin, relay2State ? HIGH : LOW);
-
-      }else if (strcmp(name, "Channel 3") == 0) {
-        relay3State = statusValue;
-        digitalWrite(relay3Pin, relay3State ? HIGH : LOW);
-
-      }else if (strcmp(name, "Channel 4") == 0) {
-        relay4State = statusValue;
-        digitalWrite(relay4Pin, relay4State ? HIGH : LOW);
+      if(i == 0){
+      // put values to 1
+      }else  if(i == 1){
+      // put values to 2
+      }else  if(i == 2){
+      // put values to 3
+      }else  if(i == 3){
+      // put values to 4
+      } else {
+        // error
       }
+
+      // Print the channel status data
+      Serial.print("Name: ");
+      Serial.println(name);
+      Serial.print("Status: ");
+      Serial.println(statusValue);
+      Serial.print("Date: ");
+      Serial.println(date ? date : "null");
+      Serial.print("Time: ");
+      Serial.println(time ? time : "null");
+      Serial.println();
     }
+
+      //Channel 1
+      if (statusValue1 == true) {
+        relay1State = true;
+          // if(time is greater than time1){
+          // relay1State = false;
+          // }
+        digitalWrite(relay1Pin, HIGH);
+      } 
+      else if (statusValue1 == false) {
+        relay1State = false;
+      }
+      
+      //Channel 2
+      if (statusValue2 == true) {
+        relay2State = true;
+          // if(time is greater than time1){
+          // relay2State = false;
+          // }
+        digitalWrite(relay2Pin, HIGH);
+      } 
+      else if (statusValue2 == false) {
+        relay2State = false;
+      }
+
+      //Channel 3
+      if (statusValue3 == true) {
+        relay3State = true;
+          // if(time is greater than time1){
+          // relay3State = false;
+          // }
+        digitalWrite(relay3Pin, HIGH);
+      } 
+      else if (statusValue3 == false) {
+        relay3State = false;
+      }
+      
+      //Channel 4
+      if (statusValue4 == true) {
+        relay4State = true;
+          // if(time is greater than time1){
+          // relay3State = false;
+          // }
+        digitalWrite(relay4Pin, HIGH);
+      } 
+      else if (statusValue 1 == false) {
+        relay1State = false;
+      }
+
   }
 
   Serial.println("Request complete.");
