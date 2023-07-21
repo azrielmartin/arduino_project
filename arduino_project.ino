@@ -132,6 +132,10 @@ void getMyChannelStatus() {
     jsonPayload = client.readStringUntil('\n');
     Serial.println(jsonPayload);
   }
+  
+// Print the received JSON payload before parsing
+  Serial.println("Received JSON Payload:");
+  Serial.println(jsonPayload);
 
   StaticJsonDocument<256> jsonDocument;
   DeserializationError error = deserializeJson(jsonDocument, jsonPayload);
