@@ -82,7 +82,7 @@ void getAmIActive() {
     Serial.println(error.c_str());
   } else {
     char* data;
-    
+    bool activated = false;
 
     if (jsonDocument.containsKey("error")) {
       data = strdup(jsonDocument["error"].as<char*>());
@@ -102,6 +102,9 @@ void getAmIActive() {
       Serial.print("Data: ");
       Serial.println(data);
       free(data);
+    }
+    if(!activated){
+      getMyChannelStatus;
     }
   }
 
@@ -132,7 +135,7 @@ void getMyChannelStatus() {
     jsonPayload = client.readStringUntil('\n');
     Serial.println(jsonPayload);
   }
-  
+
 // Print the received JSON payload before parsing
   Serial.println("Received JSON Payload:");
   Serial.println(jsonPayload);
